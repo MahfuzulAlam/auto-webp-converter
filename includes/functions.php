@@ -46,6 +46,16 @@ add_filter( 'wp_handle_upload_prefilter', 'wpxplore_awc_handle_upload' );
  * @return array Modified file array.
  */
 function wpxplore_awc_handle_frontend_upload( $file ) {
+	// Validate file array
+	if ( ! is_array( $file ) || empty( $file ) ) {
+		return $file;
+	}
+
+	// Check if Directorist is active before processing
+	if ( ! class_exists( 'WpXplore_AWC_Directorist' ) ) {
+		return $file;
+	}
+
 	$directorist = WpXplore_AWC_Directorist::get_instance();
 
 	// Check if this is a Directorist frontend add listing page upload
@@ -64,6 +74,11 @@ function wpxplore_awc_handle_frontend_upload( $file ) {
  * @return array Modified file array.
  */
 function wpxplore_awc_handle_admin_upload( $file ) {
+	// Validate file array
+	if ( ! is_array( $file ) || empty( $file ) ) {
+		return $file;
+	}
+
 	$settings = WpXplore_AWC_Settings::get_settings();
 	$post_type = wpxplore_awc_get_upload_context_post_type();
 
@@ -85,17 +100,24 @@ function wpxplore_awc_handle_admin_upload( $file ) {
  * @return array Modified file array.
  */
 function wpxplore_awc_handle_featured_image_upload( $file, $post_type, $settings ) {
+	// Validate post type
+	if ( empty( $post_type ) || ! is_string( $post_type ) || ! post_type_exists( $post_type ) ) {
+		return $file;
+	}
+
 	// Get enabled post types from settings
 	$enabled_post_types = isset( $settings['featured_image_post_types'] ) && is_array( $settings['featured_image_post_types'] ) 
 		? $settings['featured_image_post_types'] 
 		: array();
 
 	// Add Directorist post types if enabled
-	$directorist = WpXplore_AWC_Directorist::get_instance();
-	if ( $directorist->is_conversion_enabled() ) {
-		$directorist_post_types = $directorist->get_post_types();
-		if ( ! empty( $directorist_post_types ) ) {
-			$enabled_post_types = array_merge( $enabled_post_types, $directorist_post_types );
+	if ( class_exists( 'WpXplore_AWC_Directorist' ) ) {
+		$directorist = WpXplore_AWC_Directorist::get_instance();
+		if ( $directorist->is_conversion_enabled() ) {
+			$directorist_post_types = $directorist->get_post_types();
+			if ( ! empty( $directorist_post_types ) && is_array( $directorist_post_types ) ) {
+				$enabled_post_types = array_merge( $enabled_post_types, $directorist_post_types );
+			}
 		}
 	}
 
@@ -132,6 +154,11 @@ function wpxplore_awc_handle_media_library_upload( $file, $settings ) {
  * @return array Modified file array.
  */
 function wpxplore_awc_convert_image( $file ) {
+	// Validate file array
+	if ( ! is_array( $file ) || empty( $file ) ) {
+		return $file;
+	}
+
 	$converter = wpxplore_awc_get_instance();
 	return $converter->convert_to_webp( $file );
 }
@@ -145,19 +172,21 @@ function wpxplore_awc_convert_image( $file ) {
  */
 function wpxplore_awc_get_upload_context_post_type() {
 	// Check if we have a post_id in POST data (from media uploader on post edit screen).
-	if ( isset( $_POST['post_id'] ) && ! empty( $_POST['post_id'] ) && 0 !== absint( $_POST['post_id'] ) ) {
-		$post_id = absint( $_POST['post_id'] );
-		$post = get_post( $post_id );
-		if ( $post && isset( $post->post_type ) && ! empty( $post->post_type ) ) {
-			return $post->post_type;
+	if ( isset( $_POST['post_id'] ) && ! empty( $_POST['post_id'] ) ) {
+		$post_id = absint( wp_unslash( $_POST['post_id'] ) );
+		if ( $post_id > 0 ) {
+			$post = get_post( $post_id );
+			if ( $post instanceof WP_Post && ! empty( $post->post_type ) ) {
+				return sanitize_key( $post->post_type );
+			}
 		}
 	}
 	
 	// Check current screen if available (for direct uploads from post edit screen).
 	if ( function_exists( 'get_current_screen' ) ) {
 		$screen = get_current_screen();
-		if ( $screen && isset( $screen->post_type ) && ! empty( $screen->post_type ) && 'attachment' !== $screen->post_type ) {
-			return $screen->post_type;
+		if ( $screen instanceof WP_Screen && isset( $screen->post_type ) && ! empty( $screen->post_type ) && 'attachment' !== $screen->post_type ) {
+			return sanitize_key( $screen->post_type );
 		}
 	}
 	
@@ -165,22 +194,24 @@ function wpxplore_awc_get_upload_context_post_type() {
 	if ( isset( $_SERVER['HTTP_REFERER'] ) && ! empty( $_SERVER['HTTP_REFERER'] ) ) {
 		$referer = esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
 		// Parse referer to check if it's a post edit page.
-		$parsed_url = parse_url( $referer );
+		$parsed_url = wp_parse_url( $referer );
 		if ( isset( $parsed_url['query'] ) && ! empty( $parsed_url['query'] ) ) {
 			parse_str( $parsed_url['query'], $query_params );
 			
 			// Check for post ID in referer.
 			if ( isset( $query_params['post'] ) && ! empty( $query_params['post'] ) ) {
 				$post_id = absint( $query_params['post'] );
-				$post = get_post( $post_id );
-				if ( $post && isset( $post->post_type ) && ! empty( $post->post_type ) ) {
-					return $post->post_type;
+				if ( $post_id > 0 ) {
+					$post = get_post( $post_id );
+					if ( $post instanceof WP_Post && ! empty( $post->post_type ) ) {
+						return sanitize_key( $post->post_type );
+					}
 				}
 			}
 			
 			// Check for post_type parameter in referer.
 			if ( isset( $query_params['post_type'] ) && ! empty( $query_params['post_type'] ) ) {
-				$post_type = sanitize_text_field( $query_params['post_type'] );
+				$post_type = sanitize_key( $query_params['post_type'] );
 				if ( post_type_exists( $post_type ) && 'attachment' !== $post_type ) {
 					return $post_type;
 				}

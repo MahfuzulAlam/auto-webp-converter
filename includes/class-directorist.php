@@ -118,7 +118,7 @@ class WpXplore_AWC_Directorist {
 
 		add_settings_field(
 			'directorist_post_types',
-			__( 'Directorist post type<br>(Admin Panel)', 'wpxplore-webp-converter' ),
+			__( 'Directorist post type (Admin Panel)', 'wpxplore-webp-converter' ),
 			array( $this, 'render_post_type_field' ),
 			'auto-webp-converter',
 			'wpxplore_awc_directorist_section'
@@ -126,7 +126,7 @@ class WpXplore_AWC_Directorist {
 
 		add_settings_field(
 			'directorist_frontend_add_listing',
-			__( 'Add listing page<br>(Frontend)', 'wpxplore-webp-converter' ),
+			__( 'Add listing page (Frontend)', 'wpxplore-webp-converter' ),
 			array( $this, 'render_frontend_add_listing_field' ),
 			'auto-webp-converter',
 			'wpxplore_awc_directorist_section'
@@ -138,7 +138,7 @@ class WpXplore_AWC_Directorist {
 	 */
 	public function render_section_description() {
 		?>
-		<p><?php esc_html_e( 'Configure image conversion for Directorist listings. Enable conversion for admin panel featured images or frontend add listing page uploads.', 'wpxplore-webp-converter' ); ?></p>
+		<p class="wpxplore-awc-section-description"><?php esc_html_e( 'Configure image conversion for Directorist listings. Enable conversion for admin panel featured images or frontend add listing page uploads.', 'wpxplore-webp-converter' ); ?></p>
 		<?php
 	}
 
@@ -149,8 +149,8 @@ class WpXplore_AWC_Directorist {
 		$settings = WpXplore_AWC_Settings::get_settings();
 		$enabled  = isset( $settings['directorist_post_type'] ) ? (bool) $settings['directorist_post_type'] : false;
 		?>
-		<fieldset>
-			<label>
+		<div class="wpxplore-awc-field-wrapper">
+			<label for="wpxplore_awc_directorist_post_type">
 				<input 
 					type="checkbox" 
 					name="<?php echo esc_attr( WpXplore_AWC_Settings::OPTION_NAME ); ?>[directorist_post_type]" 
@@ -160,11 +160,10 @@ class WpXplore_AWC_Directorist {
 				/>
 				<?php esc_html_e( 'Enable', 'wpxplore-webp-converter' ); ?>
 			</label>
-			<br />
-		</fieldset>
-		<p class="description">
-			<?php esc_html_e( 'When enabled for a Directorist post type, featured images uploaded from the admin panel edit page will be automatically converted to WebP format.', 'wpxplore-webp-converter' ); ?>
-		</p>
+			<p class="description">
+				<?php esc_html_e( 'When enabled for a Directorist post type, featured images uploaded from the admin panel edit page will be automatically converted to WebP format.', 'wpxplore-webp-converter' ); ?>
+			</p>
+		</div>
 		<?php
 	}
 
@@ -204,8 +203,8 @@ class WpXplore_AWC_Directorist {
 		$settings = WpXplore_AWC_Settings::get_settings();
 		$enabled  = isset( $settings['directorist_frontend_add_listing'] ) ? (bool) $settings['directorist_frontend_add_listing'] : false;
 		?>
-		<fieldset>
-			<label>
+		<div class="wpxplore-awc-field-wrapper">
+			<label for="wpxplore_awc_directorist_frontend_add_listing">
 				<input 
 					type="checkbox" 
 					name="<?php echo esc_attr( WpXplore_AWC_Settings::OPTION_NAME ); ?>[directorist_frontend_add_listing]" 
@@ -215,11 +214,10 @@ class WpXplore_AWC_Directorist {
 				/>
 				<?php esc_html_e( 'Enable', 'wpxplore-webp-converter' ); ?>
 			</label>
-			<br />
-		</fieldset>
-		<p class="description">
-			<?php esc_html_e( 'When enabled, images uploaded from the frontend Add Listing page will be automatically converted to WebP format.', 'wpxplore-webp-converter' ); ?>
-		</p>
+			<p class="description">
+				<?php esc_html_e( 'When enabled, images uploaded from the frontend Add Listing page will be automatically converted to WebP format.', 'wpxplore-webp-converter' ); ?>
+			</p>
+		</div>
 		<?php
 	}
 
@@ -270,16 +268,9 @@ class WpXplore_AWC_Directorist {
 			$referer = esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
 			$page_url = get_permalink( $add_listing_page_id );
 			
-			if ( $page_url && strpos( $referer, $page_url ) !== false ) {
+			if ( $page_url && false !== strpos( $referer, $page_url ) ) {
 				return true;
 			}
-		}
-
-		// Check for Directorist-specific POST data that indicates listing upload
-		if ( isset( $_POST['at_biz_dir-id'] ) || isset( $_POST['listing_id'] ) || isset( $_POST['directorist_listing_id'] ) ) {
-			// If we have Directorist POST data, assume it's from add listing page
-			// This handles cases where referer might not be available
-			return true;
 		}
 
 		return false;
