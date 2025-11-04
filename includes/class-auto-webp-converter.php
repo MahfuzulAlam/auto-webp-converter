@@ -57,6 +57,11 @@ class WpXplore_Auto_WebP_Converter {
 	private function init() {
 		// Check if required image libraries are available
 		add_action( 'admin_notices', array( $this, 'admin_notice' ) );
+		
+		// Initialize settings
+		if ( is_admin() ) {
+			new WpXplore_AWC_Settings();
+		}
 	}
 
 	/**
@@ -100,16 +105,38 @@ class WpXplore_Auto_WebP_Converter {
 	 * @return bool True if supported, false otherwise.
 	 */
 	public function is_supported_image( $file ) {
-		$supported_types = array( 'image/jpeg', 'image/jpg', 'image/png' );
-		$file_type       = wp_check_filetype( $file['name'] );
+		$settings = WpXplore_AWC_Settings::get_settings();
+		$allowed_types = isset( $settings['allowed_types'] ) && is_array( $settings['allowed_types'] ) ? $settings['allowed_types'] : array( 'jpeg', 'png' );
+		
+		// Build supported MIME types based on settings.
+		$supported_mimes = array();
+		$supported_exts  = array();
+		
+		if ( in_array( 'jpeg', $allowed_types, true ) ) {
+			$supported_mimes[] = 'image/jpeg';
+			$supported_mimes[] = 'image/jpg';
+			$supported_exts[]  = 'jpg';
+			$supported_exts[]  = 'jpeg';
+		}
+		
+		if ( in_array( 'png', $allowed_types, true ) ) {
+			$supported_mimes[] = 'image/png';
+			$supported_exts[]  = 'png';
+		}
+		
+		if ( empty( $supported_mimes ) ) {
+			return false;
+		}
+		
+		$file_type = wp_check_filetype( $file['name'] );
 
 		// Check MIME type.
-		if ( isset( $file['type'] ) && in_array( $file['type'], $supported_types, true ) ) {
+		if ( isset( $file['type'] ) && in_array( $file['type'], $supported_mimes, true ) ) {
 			return true;
 		}
 
 		// Fallback: check file extension.
-		if ( in_array( strtolower( $file_type['ext'] ), array( 'jpg', 'jpeg', 'png' ), true ) ) {
+		if ( in_array( strtolower( $file_type['ext'] ), $supported_exts, true ) ) {
 			return true;
 		}
 
@@ -229,14 +256,18 @@ class WpXplore_Auto_WebP_Converter {
 		$destination_path = $file['tmp_name'] . '.webp';
 
 		$converted = false;
+		
+		// Get quality from settings.
+		$settings = WpXplore_AWC_Settings::get_settings();
+		$quality  = isset( $settings['quality'] ) ? absint( $settings['quality'] ) : 80;
 
 		// Try Imagick first, then fall back to GD.
 		if ( $libraries['imagick'] ) {
-			$converted = $this->convert_with_imagick( $source_path, $destination_path, 80 );
+			$converted = $this->convert_with_imagick( $source_path, $destination_path, $quality );
 		}
 
 		if ( ! $converted && $libraries['gd'] ) {
-			$converted = $this->convert_with_gd( $source_path, $destination_path, 80 );
+			$converted = $this->convert_with_gd( $source_path, $destination_path, $quality );
 		}
 
 		if ( $converted && file_exists( $destination_path ) ) {

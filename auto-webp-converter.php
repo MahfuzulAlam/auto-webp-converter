@@ -41,6 +41,7 @@ if ( ! defined( 'AWC_PLUGIN_BASENAME' ) ) {
 /**
  * Load plugin files
  */
+require_once AWC_PLUGIN_DIR . 'includes/class-settings.php';
 require_once AWC_PLUGIN_DIR . 'includes/class-auto-webp-converter.php';
 require_once AWC_PLUGIN_DIR . 'includes/functions.php';
 
