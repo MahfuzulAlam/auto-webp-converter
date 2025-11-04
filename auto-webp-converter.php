@@ -50,6 +50,6 @@ require_once AWC_PLUGIN_DIR . 'includes/functions.php';
  * @return void
  */
 function wpxplore_awc_init() {
-	$plugin = Auto_WebP_Converter::get_instance();
+	$plugin = WpXplore_Auto_WebP_Converter::get_instance();
 }
 add_action( 'plugins_loaded', 'wpxplore_awc_init' );
