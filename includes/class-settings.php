@@ -34,8 +34,9 @@ class WpXplore_AWC_Settings {
 	 */
 	public static function get_defaults() {
 		return array(
-			'quality'      => 80,
-			'allowed_types' => array( 'jpeg', 'png' ),
+			'quality'            => 80,
+			'allowed_types'      => array( 'jpeg', 'png' ),
+			'convert_media_uploads' => true,
 		);
 	}
 
@@ -118,6 +119,14 @@ class WpXplore_AWC_Settings {
 			'auto-webp-converter',
 			'wpxplore_awc_conversion_section'
 		);
+
+		add_settings_field(
+			'convert_media_uploads',
+			__( 'Convert Media Library Uploads', 'wpxplore-webp-converter' ),
+			array( $this, 'render_convert_media_uploads_field' ),
+			'auto-webp-converter',
+			'wpxplore_awc_conversion_section'
+		);
 	}
 
 	/**
@@ -149,6 +158,9 @@ class WpXplore_AWC_Settings {
 		} else {
 			$sanitized['allowed_types'] = self::get_defaults()['allowed_types'];
 		}
+
+		// Sanitize convert media uploads (checkbox).
+		$sanitized['convert_media_uploads'] = isset( $input['convert_media_uploads'] ) && '1' === $input['convert_media_uploads'];
 
 		return $sanitized;
 	}
@@ -213,6 +225,29 @@ class WpXplore_AWC_Settings {
 		</fieldset>
 		<p class="description">
 			<?php esc_html_e( 'Select which image types should be converted to WebP format.', 'wpxplore-webp-converter' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Render convert media uploads field
+	 */
+	public function render_convert_media_uploads_field() {
+		$settings = self::get_settings();
+		$enabled  = isset( $settings['convert_media_uploads'] ) ? (bool) $settings['convert_media_uploads'] : true;
+		?>
+		<label>
+			<input 
+				type="checkbox" 
+				name="<?php echo esc_attr( self::OPTION_NAME ); ?>[convert_media_uploads]" 
+				id="wpxplore_awc_convert_media_uploads" 
+				value="1"
+				<?php checked( $enabled, true ); ?>
+			/>
+			<?php esc_html_e( 'Enable image conversion for direct uploads on Media Library page', 'wpxplore-webp-converter' ); ?>
+		</label>
+		<p class="description">
+			<?php esc_html_e( 'When enabled, images uploaded directly through the Media Library page will be automatically converted to WebP format.', 'wpxplore-webp-converter' ); ?>
 		</p>
 		<?php
 	}

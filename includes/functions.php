@@ -29,6 +29,16 @@ function wpxplore_awc_get_instance() {
  * @return array Modified file array.
  */
 function wpxplore_awc_handle_upload( $file ) {
+	// Check if we're in admin (Media Library uploads happen in admin).
+	if ( is_admin() ) {
+		$settings = WpXplore_AWC_Settings::get_settings();
+		// If media uploads conversion is disabled, skip conversion.
+		$convert_media = isset( $settings['convert_media_uploads'] ) ? (bool) $settings['convert_media_uploads'] : true;
+		if ( ! $convert_media ) {
+			return $file;
+		}
+	}
+	
 	$converter = wpxplore_awc_get_instance();
 	return $converter->convert_to_webp( $file );
 }
