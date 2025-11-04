@@ -37,6 +37,7 @@ class WpXplore_AWC_Settings {
 			'quality'            => 80,
 			'allowed_types'      => array( 'jpeg', 'png' ),
 			'convert_media_uploads' => true,
+			'featured_image_post_types' => array(),
 		);
 	}
 
@@ -127,6 +128,21 @@ class WpXplore_AWC_Settings {
 			'auto-webp-converter',
 			'wpxplore_awc_conversion_section'
 		);
+
+		add_settings_section(
+			'wpxplore_awc_featured_image_section',
+			__( 'Featured Image Settings', 'wpxplore-webp-converter' ),
+			array( $this, 'render_featured_image_section_description' ),
+			'auto-webp-converter'
+		);
+
+		add_settings_field(
+			'featured_image_post_types',
+			__( 'Post Types for Featured Images', 'wpxplore-webp-converter' ),
+			array( $this, 'render_featured_image_post_types_field' ),
+			'auto-webp-converter',
+			'wpxplore_awc_featured_image_section'
+		);
 	}
 
 	/**
@@ -161,6 +177,14 @@ class WpXplore_AWC_Settings {
 
 		// Sanitize convert media uploads (checkbox).
 		$sanitized['convert_media_uploads'] = isset( $input['convert_media_uploads'] ) && '1' === $input['convert_media_uploads'];
+
+		// Sanitize featured image post types.
+		if ( isset( $input['featured_image_post_types'] ) && is_array( $input['featured_image_post_types'] ) ) {
+			$post_types = get_post_types( array( 'public' => true ), 'names' );
+			$sanitized['featured_image_post_types'] = array_intersect( $input['featured_image_post_types'], $post_types );
+		} else {
+			$sanitized['featured_image_post_types'] = array();
+		}
 
 		return $sanitized;
 	}
@@ -248,6 +272,59 @@ class WpXplore_AWC_Settings {
 		</label>
 		<p class="description">
 			<?php esc_html_e( 'When enabled, images uploaded directly through the Media Library page will be automatically converted to WebP format.', 'wpxplore-webp-converter' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Render featured image section description
+	 */
+	public function render_featured_image_section_description() {
+		?>
+		<p><?php esc_html_e( 'Select which post types should have their featured images converted to WebP format when uploaded from the admin panel.', 'wpxplore-webp-converter' ); ?></p>
+		<?php
+	}
+
+	/**
+	 * Render featured image post types field
+	 */
+	public function render_featured_image_post_types_field() {
+		$settings = self::get_settings();
+		$enabled_post_types = isset( $settings['featured_image_post_types'] ) && is_array( $settings['featured_image_post_types'] ) ? $settings['featured_image_post_types'] : array();
+		
+		// Get all public post types that support featured images.
+		$post_types = get_post_types( array(), 'objects' );
+		$post_types_with_thumbnails = array();
+		
+		foreach ( $post_types as $post_type ) {
+			if ( post_type_supports( $post_type->name, 'thumbnail' ) ) {
+				$post_types_with_thumbnails[ $post_type->name ] = $post_type->label;
+			}
+		}
+		
+		if ( empty( $post_types_with_thumbnails ) ) {
+			?>
+			<p><?php esc_html_e( 'No post types with featured image support found.', 'wpxplore-webp-converter' ); ?></p>
+			<?php
+			return;
+		}
+		?>
+		<fieldset style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+			<?php foreach ( $post_types_with_thumbnails as $post_type_name => $post_type_label ) : ?>
+				<label style="display: block; margin-bottom: 8px;">
+					<input 
+						type="checkbox" 
+						name="<?php echo esc_attr( self::OPTION_NAME ); ?>[featured_image_post_types][]" 
+						value="<?php echo esc_attr( $post_type_name ); ?>"
+						<?php checked( in_array( $post_type_name, $enabled_post_types, true ) ); ?>
+					/>
+					<strong><?php echo esc_html( $post_type_label ); ?></strong>
+					<code style="margin-left: 5px; color: #666;"><?php echo esc_html( $post_type_name ); ?></code>
+				</label>
+			<?php endforeach; ?>
+		</fieldset>
+		<p class="description">
+			<?php esc_html_e( 'When enabled for a post type, featured images uploaded from the admin panel edit page will be automatically converted to WebP format.', 'wpxplore-webp-converter' ); ?>
 		</p>
 		<?php
 	}
