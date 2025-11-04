@@ -42,6 +42,7 @@ if ( ! defined( 'AWC_PLUGIN_BASENAME' ) ) {
  * Load plugin files
  */
 require_once AWC_PLUGIN_DIR . 'includes/class-settings.php';
+require_once AWC_PLUGIN_DIR . 'includes/class-directorist.php';
 require_once AWC_PLUGIN_DIR . 'includes/class-auto-webp-converter.php';
 require_once AWC_PLUGIN_DIR . 'includes/functions.php';
 
@@ -52,5 +53,10 @@ require_once AWC_PLUGIN_DIR . 'includes/functions.php';
  */
 function wpxplore_awc_init() {
 	$plugin = WpXplore_Auto_WebP_Converter::get_instance();
+	
+	// Initialize Directorist integration if Directorist is active
+	if ( class_exists( 'WpXplore_AWC_Directorist' ) ) {
+		WpXplore_AWC_Directorist::get_instance();
+	}
 }
 add_action( 'plugins_loaded', 'wpxplore_awc_init' );

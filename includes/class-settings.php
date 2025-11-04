@@ -38,6 +38,8 @@ class WpXplore_AWC_Settings {
 			'allowed_types'      => array( 'jpeg', 'png' ),
 			'convert_media_uploads' => true,
 			'featured_image_post_types' => array(),
+			'directorist_post_type' => false,
+			'directorist_frontend_add_listing' => false,
 		);
 	}
 
@@ -143,6 +145,7 @@ class WpXplore_AWC_Settings {
 			'auto-webp-converter',
 			'wpxplore_awc_featured_image_section'
 		);
+
 	}
 
 	/**
@@ -185,6 +188,12 @@ class WpXplore_AWC_Settings {
 		} else {
 			$sanitized['featured_image_post_types'] = array();
 		}
+
+		// Sanitize directorist post type (checkbox).
+		$sanitized['directorist_post_type'] = isset( $input['directorist_post_type'] ) && 'enable' === $input['directorist_post_type'];
+
+		// Sanitize directorist frontend add listing (checkbox).
+		$sanitized['directorist_frontend_add_listing'] = isset( $input['directorist_frontend_add_listing'] ) && 'enable' === $input['directorist_frontend_add_listing'];
 
 		return $sanitized;
 	}
