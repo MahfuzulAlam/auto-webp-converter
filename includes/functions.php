@@ -171,8 +171,10 @@ function wpxplore_awc_convert_image( $file ) {
  * @return string|false Post type slug or false if not in post edit context.
  */
 function wpxplore_awc_get_upload_context_post_type() {
+	// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Read-only context detection; upload authorization is handled by WordPress core before this filter runs.
+
 	// Check if we have a post_id in POST data (from media uploader on post edit screen).
-	if ( isset( $_POST['post_id'] ) && ! empty( $_POST['post_id'] ) ) {
+	if ( ! empty( $_POST['post_id'] ) ) {
 		$post_id = absint( wp_unslash( $_POST['post_id'] ) );
 		if ( $post_id > 0 ) {
 			$post = get_post( $post_id );
@@ -191,7 +193,7 @@ function wpxplore_awc_get_upload_context_post_type() {
 	}
 	
 	// Check HTTP_REFERER for post edit page (most reliable for AJAX uploads).
-	if ( isset( $_SERVER['HTTP_REFERER'] ) && ! empty( $_SERVER['HTTP_REFERER'] ) ) {
+	if ( ! empty( $_SERVER['HTTP_REFERER'] ) ) {
 		$referer = esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
 		// Parse referer to check if it's a post edit page.
 		$parsed_url = wp_parse_url( $referer );
@@ -218,7 +220,8 @@ function wpxplore_awc_get_upload_context_post_type() {
 			}
 		}
 	}
-	
+
 	return false;
+	// phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
 }
 

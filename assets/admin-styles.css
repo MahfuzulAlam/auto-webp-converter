@@ -1,0 +1,525 @@
+/**
+ * Admin Settings Page Styles
+ * Auto WebP Converter
+ */
+
+/* ---------------------------------- */
+/* Design tokens                       */
+/* ---------------------------------- */
+.wpxplore-awc-settings-wrap {
+	--awc-accent: #6366f1;
+	--awc-accent-2: #8b5cf6;
+	--awc-gradient: linear-gradient(135deg, var(--awc-accent) 0%, var(--awc-accent-2) 100%);
+	--awc-ink: #0f172a;
+	--awc-text: #334155;
+	--awc-muted: #64748b;
+	--awc-border: #e2e8f0;
+	--awc-surface: #ffffff;
+	--awc-surface-2: #f8fafc;
+	--awc-ring: 0 0 0 3px rgba(99, 102, 241, 0.22);
+	--awc-radius: 14px;
+	--awc-radius-sm: 9px;
+	--awc-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+
+	max-width: 960px;
+	margin: 24px 0;
+	font-size: 14px;
+	color: var(--awc-text);
+}
+
+/* ---------------------------------- */
+/* Hero header                         */
+/* ---------------------------------- */
+.wpxplore-awc-settings-header {
+	position: relative;
+	overflow: hidden;
+	background: #0f172a;
+	background-image:
+		radial-gradient(600px 300px at 0% 0%, rgba(99, 102, 241, 0.35), transparent 60%),
+		radial-gradient(500px 260px at 100% 100%, rgba(139, 92, 246, 0.3), transparent 60%);
+	color: #fff;
+	padding: 36px 40px;
+	border-radius: var(--awc-radius);
+	margin-bottom: 24px;
+	box-shadow: var(--awc-shadow);
+}
+
+.wpxplore-awc-settings-header::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	border-radius: inherit;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.wpxplore-awc-settings-header h1 {
+	color: #fff;
+	margin: 0;
+	font-size: 26px;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	line-height: 1.2;
+}
+
+.wpxplore-awc-settings-header h1::before {
+	content: "WebP";
+	display: inline-block;
+	vertical-align: 3px;
+	margin-right: 12px;
+	padding: 3px 10px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	background: var(--awc-gradient);
+	border-radius: 999px;
+}
+
+.wpxplore-awc-settings-header p {
+	margin: 10px 0 0;
+	max-width: 560px;
+	color: rgba(226, 232, 240, 0.85);
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+/* ---------------------------------- */
+/* Form card                           */
+/* ---------------------------------- */
+.wpxplore-awc-settings-form {
+	background: var(--awc-surface);
+	border: 1px solid var(--awc-border);
+	border-radius: var(--awc-radius);
+	box-shadow: var(--awc-shadow);
+	overflow: hidden;
+}
+
+.wpxplore-awc-settings-content {
+	padding: 8px 40px 32px;
+}
+
+/* Section titles (output by do_settings_sections) */
+.wpxplore-awc-settings-content h2 {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 36px 0 6px;
+	padding: 0;
+	font-size: 16px;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	color: var(--awc-ink);
+}
+
+.wpxplore-awc-settings-content h2::before {
+	content: "";
+	width: 4px;
+	height: 18px;
+	border-radius: 999px;
+	background: var(--awc-gradient);
+}
+
+.wpxplore-awc-settings-content h2:not(:first-of-type) {
+	border-top: 1px solid var(--awc-border);
+	padding-top: 32px;
+}
+
+.wpxplore-awc-section-description {
+	margin: 0 0 8px 14px;
+	color: var(--awc-muted);
+	font-size: 13px;
+	line-height: 1.6;
+}
+
+/* ---------------------------------- */
+/* Settings rows (WP form-table)       */
+/* ---------------------------------- */
+.wpxplore-awc-settings-content table.form-table,
+.wpxplore-awc-settings-content table.form-table tbody {
+	display: block;
+	margin: 0;
+}
+
+.wpxplore-awc-settings-content table.form-table tr {
+	display: grid;
+	grid-template-columns: 220px 1fr;
+	gap: 8px 32px;
+	padding: 20px 0;
+}
+
+.wpxplore-awc-settings-content table.form-table tr + tr {
+	border-top: 1px dashed var(--awc-border);
+}
+
+.wpxplore-awc-settings-content table.form-table th {
+	display: block;
+	width: auto;
+	padding: 4px 0 0;
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--awc-ink);
+	line-height: 1.4;
+}
+
+.wpxplore-awc-settings-content table.form-table td {
+	display: block;
+	width: auto;
+	padding: 0;
+	margin: 0;
+}
+
+.wpxplore-awc-field-wrapper {
+	margin: 0;
+	padding: 0;
+	background: none;
+	border: none;
+}
+
+/* Field descriptions */
+.wpxplore-awc-field-wrapper .description {
+	margin: 10px 0 0;
+	padding: 0;
+	background: none;
+	border: none;
+	color: var(--awc-muted);
+	font-size: 13px;
+	font-style: normal;
+	line-height: 1.55;
+	max-width: 520px;
+}
+
+/* ---------------------------------- */
+/* Text / number inputs                */
+/* ---------------------------------- */
+.wpxplore-awc-field-wrapper input[type="number"],
+.wpxplore-awc-field-wrapper input[type="text"] {
+	padding: 9px 12px;
+	border: 1px solid #cbd5e1;
+	border-radius: var(--awc-radius-sm);
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--awc-ink);
+	background: var(--awc-surface);
+	width: 96px;
+	line-height: 1.4;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wpxplore-awc-field-wrapper input[type="number"]:hover,
+.wpxplore-awc-field-wrapper input[type="text"]:hover {
+	border-color: #94a3b8;
+}
+
+.wpxplore-awc-field-wrapper input[type="number"]:focus,
+.wpxplore-awc-field-wrapper input[type="text"]:focus {
+	border-color: var(--awc-accent);
+	outline: none;
+	box-shadow: var(--awc-ring);
+}
+
+/* ---------------------------------- */
+/* Toggle switches (single checkboxes) */
+/* ---------------------------------- */
+.wpxplore-awc-field-wrapper > label {
+	display: inline-flex;
+	align-items: center;
+	gap: 12px;
+	margin: 0;
+	padding: 0;
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--awc-text);
+}
+
+.wpxplore-awc-field-wrapper > label:hover {
+	background: none;
+	border: none;
+	color: var(--awc-ink);
+}
+
+.wpxplore-awc-field-wrapper > label > input[type="checkbox"] {
+	-webkit-appearance: none;
+	appearance: none;
+	flex: 0 0 auto;
+	width: 44px;
+	height: 24px;
+	margin: 0;
+	border: none;
+	border-radius: 999px;
+	background: #cbd5e1;
+	position: relative;
+	cursor: pointer;
+	transition: background 0.2s ease;
+	box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+/* The :checked variant is repeated to out-rank wp-admin's dashicon
+   checkmark rule (input[type=checkbox]:checked::before), which otherwise
+   injects a glyph with negative margins and shifts the thumb. */
+.wpxplore-awc-field-wrapper > label > input[type="checkbox"]::before,
+.wpxplore-awc-field-wrapper > label > input[type="checkbox"]:checked::before {
+	content: "";
+	float: none;
+	display: block;
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	margin: 0;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+	transition: transform 0.2s ease;
+}
+
+.wpxplore-awc-field-wrapper > label > input[type="checkbox"]:checked {
+	background: var(--awc-gradient);
+}
+
+.wpxplore-awc-field-wrapper > label > input[type="checkbox"]:checked::before {
+	transform: translateX(20px);
+}
+
+.wpxplore-awc-field-wrapper > label > input[type="checkbox"]:focus-visible {
+	outline: none;
+	box-shadow: var(--awc-ring);
+}
+
+/* ---------------------------------- */
+/* Pill checkboxes (fieldsets)         */
+/* ---------------------------------- */
+.wpxplore-awc-field-wrapper fieldset {
+	margin: 0;
+	padding: 0;
+	border: none;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.wpxplore-awc-field-wrapper fieldset label {
+	display: inline-flex;
+	align-items: center;
+	gap: 9px;
+	margin: 0;
+	padding: 9px 14px;
+	background: var(--awc-surface);
+	border: 1px solid var(--awc-border);
+	border-radius: 999px;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--awc-text);
+	transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wpxplore-awc-field-wrapper fieldset label:hover {
+	border-color: var(--awc-accent);
+	background: var(--awc-surface);
+}
+
+.wpxplore-awc-field-wrapper fieldset label:has(input:checked) {
+	border-color: var(--awc-accent);
+	background: rgba(99, 102, 241, 0.07);
+	box-shadow: inset 0 0 0 1px var(--awc-accent);
+}
+
+.wpxplore-awc-field-wrapper fieldset label:has(input:focus-visible) {
+	box-shadow: var(--awc-ring);
+}
+
+.wpxplore-awc-field-wrapper fieldset label input[type="checkbox"] {
+	-webkit-appearance: none;
+	appearance: none;
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	border: 2px solid #cbd5e1;
+	border-radius: 6px;
+	background: var(--awc-surface);
+	cursor: pointer;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.wpxplore-awc-field-wrapper fieldset label input[type="checkbox"]:checked {
+	border-color: transparent;
+	background-color: var(--awc-accent);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 8.5 6.7 11 12 5.5' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-size: 13px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.wpxplore-awc-field-wrapper fieldset label input[type="checkbox"]:focus-visible {
+	outline: none;
+}
+
+/* Suppress wp-admin's dashicon checkmark inside pill checkboxes too. */
+.wpxplore-awc-field-wrapper fieldset label input[type="checkbox"]::before,
+.wpxplore-awc-field-wrapper fieldset label input[type="checkbox"]:checked::before {
+	content: none;
+}
+
+.wpxplore-awc-field-wrapper fieldset label strong {
+	flex: none;
+	font-weight: 600;
+	color: inherit;
+}
+
+.wpxplore-awc-field-wrapper fieldset label code {
+	background: var(--awc-surface-2);
+	border: 1px solid var(--awc-border);
+	padding: 1px 7px;
+	border-radius: 999px;
+	font-size: 11px;
+	color: var(--awc-muted);
+	margin: 0;
+}
+
+.wpxplore-awc-field-wrapper fieldset label:has(input:checked) code {
+	background: rgba(99, 102, 241, 0.1);
+	border-color: transparent;
+	color: var(--awc-accent);
+}
+
+/* Scrollable fieldset (post type list) */
+.wpxplore-awc-scrollable-fieldset {
+	max-height: 240px;
+	overflow-y: auto;
+	padding: 14px;
+	background: var(--awc-surface-2);
+	border: 1px solid var(--awc-border);
+	border-radius: var(--awc-radius-sm);
+	scrollbar-width: thin;
+	scrollbar-color: #cbd5e1 transparent;
+}
+
+.wpxplore-awc-scrollable-fieldset::-webkit-scrollbar {
+	width: 8px;
+}
+
+.wpxplore-awc-scrollable-fieldset::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.wpxplore-awc-scrollable-fieldset::-webkit-scrollbar-thumb {
+	background: #cbd5e1;
+	border-radius: 999px;
+}
+
+.wpxplore-awc-scrollable-fieldset::-webkit-scrollbar-thumb:hover {
+	background: #94a3b8;
+}
+
+/* ---------------------------------- */
+/* Submit bar                          */
+/* ---------------------------------- */
+.wpxplore-awc-settings-submit {
+	padding: 20px 40px;
+	background: var(--awc-surface-2);
+	border-top: 1px solid var(--awc-border);
+}
+
+.wpxplore-awc-settings-submit p.submit {
+	margin: 0;
+	padding: 0;
+}
+
+.wpxplore-awc-settings-submit .button-primary {
+	background: var(--awc-gradient);
+	border: none;
+	color: #fff;
+	padding: 10px 28px;
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	border-radius: var(--awc-radius-sm);
+	cursor: pointer;
+	transition: box-shadow 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+	box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);
+	text-shadow: none;
+}
+
+.wpxplore-awc-settings-submit .button-primary:hover,
+.wpxplore-awc-settings-submit .button-primary:focus {
+	background: var(--awc-gradient);
+	color: #fff;
+	filter: brightness(1.06);
+	transform: translateY(-1px);
+	box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+}
+
+.wpxplore-awc-settings-submit .button-primary:focus-visible {
+	outline: none;
+	box-shadow: var(--awc-ring), 0 6px 16px rgba(99, 102, 241, 0.4);
+}
+
+.wpxplore-awc-settings-submit .button-primary:active {
+	transform: translateY(0);
+}
+
+/* ---------------------------------- */
+/* Notices                             */
+/* ---------------------------------- */
+.wpxplore-awc-settings-wrap .notice {
+	margin: 0 0 20px;
+	border-radius: var(--awc-radius-sm);
+	border-left-color: var(--awc-accent);
+	box-shadow: var(--awc-shadow);
+}
+
+/* Notices keep a light background, so force dark text even under dark admin schemes. */
+.wpxplore-awc-settings-wrap .notice,
+.wpxplore-awc-settings-wrap .notice p {
+	color: var(--awc-ink);
+}
+
+/* ---------------------------------- */
+/* Responsive                          */
+/* ---------------------------------- */
+@media (max-width: 900px) {
+	.wpxplore-awc-settings-content table.form-table tr {
+		grid-template-columns: 1fr;
+		gap: 10px;
+		padding: 18px 0;
+	}
+
+	.wpxplore-awc-settings-content,
+	.wpxplore-awc-settings-submit {
+		padding-left: 24px;
+		padding-right: 24px;
+	}
+
+	.wpxplore-awc-settings-header {
+		padding: 26px 24px;
+	}
+
+	.wpxplore-awc-settings-header h1 {
+		font-size: 22px;
+	}
+}
+
+/* ---------------------------------- */
+/* Motion preferences                  */
+/* ---------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+	.wpxplore-awc-settings-wrap *,
+	.wpxplore-awc-settings-wrap *::before,
+	.wpxplore-awc-settings-wrap *::after {
+		transition: none !important;
+		animation: none !important;
+	}
+}
+
+.directorist-deprecated-item-notice
+{
+	display: none;
+}

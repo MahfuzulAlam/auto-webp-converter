@@ -32,10 +32,26 @@ class WpXplore_AWC_Settings {
 	 *
 	 * @return array Default settings
 	 */
+	/**
+	 * Image types the plugin can convert.
+	 *
+	 * @return array Map of type key => human label.
+	 */
+	public static function get_convertible_types() {
+		return array(
+			'jpeg' => __( 'JPEG', 'wpxplore-webp-converter' ),
+			'png'  => __( 'PNG', 'wpxplore-webp-converter' ),
+			'gif'  => __( 'GIF (non-animated)', 'wpxplore-webp-converter' ),
+			'bmp'  => __( 'BMP', 'wpxplore-webp-converter' ),
+			'tiff' => __( 'TIFF (requires Imagick)', 'wpxplore-webp-converter' ),
+		);
+	}
+
 	public static function get_defaults() {
 		return array(
 			'quality'            => 80,
 			'allowed_types'      => array( 'jpeg', 'png' ),
+			'keep_original'      => false,
 			'convert_media_uploads' => true,
 			'featured_image_post_types' => array(),
 			'directorist_post_type' => false,
@@ -85,11 +101,14 @@ class WpXplore_AWC_Settings {
 			return;
 		}
 
+		$style_path = AWC_PLUGIN_DIR . 'assets/admin-styles.css';
+		$style_ver  = file_exists( $style_path ) ? (string) filemtime( $style_path ) : AWC_VERSION;
+
 		wp_enqueue_style(
 			'wpxplore-awc-admin-styles',
-			AWC_PLUGIN_URL . 'includes/admin-styles.css',
+			AWC_PLUGIN_URL . 'assets/admin-styles.css',
 			array(),
-			AWC_VERSION
+			$style_ver
 		);
 	}
 
@@ -150,6 +169,14 @@ class WpXplore_AWC_Settings {
 			'wpxplore_awc_conversion_section'
 		);
 
+		add_settings_field(
+			'keep_original',
+			__( 'Keep Original Images', 'wpxplore-webp-converter' ),
+			array( $this, 'render_keep_original_field' ),
+			'auto-webp-converter',
+			'wpxplore_awc_conversion_section'
+		);
+
 		add_settings_section(
 			'wpxplore_awc_featured_image_section',
 			__( 'Featured Image Settings', 'wpxplore-webp-converter' ),
@@ -186,8 +213,8 @@ class WpXplore_AWC_Settings {
 
 		// Sanitize allowed types.
 		if ( isset( $input['allowed_types'] ) && is_array( $input['allowed_types'] ) ) {
-			$allowed = array( 'jpeg', 'png' );
-			$sanitized['allowed_types'] = array_intersect( $input['allowed_types'], $allowed );
+			$allowed = array_keys( self::get_convertible_types() );
+			$sanitized['allowed_types'] = array_values( array_intersect( $input['allowed_types'], $allowed ) );
 			
 			// Ensure at least one type is selected.
 			if ( empty( $sanitized['allowed_types'] ) ) {
@@ -196,6 +223,9 @@ class WpXplore_AWC_Settings {
 		} else {
 			$sanitized['allowed_types'] = self::get_defaults()['allowed_types'];
 		}
+
+		// Sanitize keep original (checkbox).
+		$sanitized['keep_original'] = isset( $input['keep_original'] ) && '1' === $input['keep_original'];
 
 		// Sanitize convert media uploads (checkbox).
 		$sanitized['convert_media_uploads'] = isset( $input['convert_media_uploads'] ) && '1' === $input['convert_media_uploads'];
@@ -234,8 +264,7 @@ class WpXplore_AWC_Settings {
 		$quality  = isset( $settings['quality'] ) ? absint( $settings['quality'] ) : 80;
 		?>
 		<div class="wpxplore-awc-field-wrapper">
-			<label for="wpxplore_awc_quality"><?php esc_html_e( 'Convert Quality', 'wpxplore-webp-converter' ); ?></label>
-			<input 
+			<input
 				type="number" 
 				name="<?php echo esc_attr( self::OPTION_NAME ); ?>[quality]" 
 				id="wpxplore_awc_quality" 
@@ -257,14 +286,10 @@ class WpXplore_AWC_Settings {
 	public function render_allowed_types_field() {
 		$settings      = self::get_settings();
 		$allowed_types = isset( $settings['allowed_types'] ) && is_array( $settings['allowed_types'] ) ? $settings['allowed_types'] : array( 'jpeg', 'png' );
-		
-		$image_types = array(
-			'jpeg' => __( 'JPEG', 'wpxplore-webp-converter' ),
-			'png'  => __( 'PNG', 'wpxplore-webp-converter' ),
-		);
+
+		$image_types = self::get_convertible_types();
 		?>
 		<div class="wpxplore-awc-field-wrapper">
-			<label><?php esc_html_e( 'Allow Image Type', 'wpxplore-webp-converter' ); ?></label>
 			<fieldset>
 				<?php foreach ( $image_types as $key => $label ) : ?>
 					<label>
@@ -279,7 +304,32 @@ class WpXplore_AWC_Settings {
 				<?php endforeach; ?>
 			</fieldset>
 			<p class="description">
-				<?php esc_html_e( 'Select which image types should be converted to WebP format.', 'wpxplore-webp-converter' ); ?>
+				<?php esc_html_e( 'Select which image types should be converted to WebP format. Animated GIFs are never converted (animation would be lost). TIFF conversion requires the Imagick extension.', 'wpxplore-webp-converter' ); ?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render keep original field
+	 */
+	public function render_keep_original_field() {
+		$settings = self::get_settings();
+		$enabled  = ! empty( $settings['keep_original'] );
+		?>
+		<div class="wpxplore-awc-field-wrapper">
+			<label for="wpxplore_awc_keep_original">
+				<input
+					type="checkbox"
+					name="<?php echo esc_attr( self::OPTION_NAME ); ?>[keep_original]"
+					id="wpxplore_awc_keep_original"
+					value="1"
+					<?php checked( $enabled, true ); ?>
+				/>
+				<?php esc_html_e( 'Keep the original image alongside the WebP file', 'wpxplore-webp-converter' ); ?>
+			</label>
+			<p class="description">
+				<?php esc_html_e( 'When enabled, the uploaded image (e.g. JPEG) is kept next to the converted WebP file and added to the Media Library as its own attachment. When disabled, only the WebP file is kept.', 'wpxplore-webp-converter' ); ?>
 			</p>
 		</div>
 		<?php
@@ -346,7 +396,6 @@ class WpXplore_AWC_Settings {
 		}
 		?>
 		<div class="wpxplore-awc-field-wrapper">
-			<label><?php esc_html_e( 'Post Types for Featured Images', 'wpxplore-webp-converter' ); ?></label>
 			<fieldset class="wpxplore-awc-scrollable-fieldset">
 				<?php foreach ( $post_types_with_thumbnails as $post_type_name => $post_type_label ) : ?>
 					<label>
@@ -376,16 +425,8 @@ class WpXplore_AWC_Settings {
 			return;
 		}
 
-		// Show success message if settings were saved.
-		if ( isset( $_GET['settings-updated'] ) && 'true' === sanitize_text_field( wp_unslash( $_GET['settings-updated'] ) ) ) {
-			add_settings_error(
-				'wpxplore_awc_messages',
-				'wpxplore_awc_message',
-				__( 'Settings saved successfully.', 'wpxplore-webp-converter' ),
-				'success'
-			);
-		}
-
+		// WordPress core already prints the "Settings saved." notice on options pages;
+		// only surface our own validation messages here to avoid duplicates.
 		settings_errors( 'wpxplore_awc_messages' );
 		?>
 		<div class="wrap wpxplore-awc-settings-wrap">

@@ -251,6 +251,11 @@ class WpXplore_AWC_Directorist {
 			return false;
 		}
 
+		// get_directorist_option() is defined by Directorist; guard in case it loads later or not at all.
+		if ( ! function_exists( 'get_directorist_option' ) ) {
+			return false;
+		}
+
 		// Get the add listing page ID
 		$add_listing_page_id = get_directorist_option( 'add_listing_page' );
 		
@@ -263,8 +268,9 @@ class WpXplore_AWC_Directorist {
 			return true;
 		}
 
-		// Check for AJAX uploads from the add listing page via referer
-		if ( isset( $_SERVER['HTTP_REFERER'] ) && ! empty( $_SERVER['HTTP_REFERER'] ) ) {
+		// Check for AJAX uploads from the add listing page via referer.
+		// Best-effort context detection only — never used for authorization.
+		if ( ! empty( $_SERVER['HTTP_REFERER'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$referer = esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
 			$page_url = get_permalink( $add_listing_page_id );
 			

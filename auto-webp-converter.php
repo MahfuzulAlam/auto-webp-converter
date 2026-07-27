@@ -3,7 +3,7 @@
  * Plugin Name: Auto WebP Converter
  * Plugin URI: https://wpxplore.org/plugins/auto-webp-converter/
  * Description: Automatically compresses images and converts them to WebP format during upload. Uses Imagick with GD fallback.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: wpXplore
  * Author URI: https://wpxplore.com/
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Define plugin constants
 if ( ! defined( 'AWC_VERSION' ) ) {
-	define( 'AWC_VERSION', '1.0.0' );
+	define( 'AWC_VERSION', '1.1.0' );
 }
 
 if ( ! defined( 'AWC_PLUGIN_DIR' ) ) {
@@ -52,8 +52,8 @@ require_once AWC_PLUGIN_DIR . 'includes/functions.php';
  * @return void
  */
 function wpxplore_awc_init() {
-	$plugin = WpXplore_Auto_WebP_Converter::get_instance();
-	
+	WpXplore_Auto_WebP_Converter::get_instance();
+
 	// Initialize Directorist integration if Directorist is active
 	if ( class_exists( 'WpXplore_AWC_Directorist' ) ) {
 		WpXplore_AWC_Directorist::get_instance();
