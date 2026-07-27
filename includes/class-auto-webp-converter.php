@@ -128,6 +128,11 @@ class WpXplore_Auto_WebP_Converter {
 			return false;
 		}
 		
+		// Validate file array structure
+		if ( ! isset( $file['name'] ) || empty( $file['name'] ) ) {
+			return false;
+		}
+
 		$file_type = wp_check_filetype( $file['name'] );
 
 		// Check MIME type.
@@ -136,7 +141,7 @@ class WpXplore_Auto_WebP_Converter {
 		}
 
 		// Fallback: check file extension.
-		if ( in_array( strtolower( $file_type['ext'] ), $supported_exts, true ) ) {
+		if ( isset( $file_type['ext'] ) && in_array( strtolower( $file_type['ext'] ), $supported_exts, true ) ) {
 			return true;
 		}
 
@@ -152,6 +157,11 @@ class WpXplore_Auto_WebP_Converter {
 	 * @return bool True on success, false on failure.
 	 */
 	public function convert_with_imagick( $source_path, $destination_path, $quality = 80 ) {
+		// Validate file paths
+		if ( empty( $source_path ) || empty( $destination_path ) || ! file_exists( $source_path ) ) {
+			return false;
+		}
+
 		try {
 			$imagick = new Imagick( $source_path );
 
@@ -187,6 +197,11 @@ class WpXplore_Auto_WebP_Converter {
 	 * @return bool True on success, false on failure.
 	 */
 	public function convert_with_gd( $source_path, $destination_path, $quality = 80 ) {
+		// Validate file paths
+		if ( empty( $source_path ) || empty( $destination_path ) || ! file_exists( $source_path ) ) {
+			return false;
+		}
+
 		try {
 			// Get image info.
 			$image_info = getimagesize( $source_path );
@@ -196,8 +211,6 @@ class WpXplore_Auto_WebP_Converter {
 			}
 
 			$mime_type = $image_info['mime'];
-			$width     = $image_info[0];
-			$height    = $image_info[1];
 
 			// Create image resource based on type.
 			switch ( $mime_type ) {
@@ -239,6 +252,11 @@ class WpXplore_Auto_WebP_Converter {
 	 * @return array Modified file array.
 	 */
 	public function convert_to_webp( $file ) {
+		// Validate file array structure
+		if ( ! isset( $file['tmp_name'] ) || ! isset( $file['name'] ) || empty( $file['tmp_name'] ) || empty( $file['name'] ) ) {
+			return $file;
+		}
+
 		// Check if library is available.
 		$libraries = $this->check_image_libraries();
 
@@ -248,6 +266,11 @@ class WpXplore_Auto_WebP_Converter {
 
 		// Check if file is a supported image type.
 		if ( ! $this->is_supported_image( $file ) ) {
+			return $file;
+		}
+
+		// Validate file exists and is readable
+		if ( ! file_exists( $file['tmp_name'] ) || ! is_readable( $file['tmp_name'] ) ) {
 			return $file;
 		}
 
@@ -280,15 +303,19 @@ class WpXplore_Auto_WebP_Converter {
 				// Copy WebP file over original.
 				if ( copy( $destination_path, $source_path ) ) {
 					// Update file name and type.
-					$file['name'] = $file_info['filename'] . '.webp';
+					$file['name'] = isset( $file_info['filename'] ) ? sanitize_file_name( $file_info['filename'] . '.webp' ) : $file['name'];
 					$file['type'] = 'image/webp';
 
 					// Clean up temporary WebP file.
-					@unlink( $destination_path );
+					if ( file_exists( $destination_path ) ) {
+						wp_delete_file( $destination_path );
+					}
 				}
 			} else {
 				// WebP is larger, keep original.
-				@unlink( $destination_path );
+				if ( file_exists( $destination_path ) ) {
+					wp_delete_file( $destination_path );
+				}
 			}
 		}
 

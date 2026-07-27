@@ -34,8 +34,12 @@ class WpXplore_AWC_Settings {
 	 */
 	public static function get_defaults() {
 		return array(
-			'quality'      => 80,
-			'allowed_types' => array( 'jpeg', 'png' ),
+			'quality'            => 80,
+			'allowed_types'      => array( 'jpeg', 'png' ),
+			'convert_media_uploads' => true,
+			'featured_image_post_types' => array(),
+			'directorist_post_type' => false,
+			'directorist_frontend_add_listing' => false,
 		);
 	}
 
@@ -68,6 +72,25 @@ class WpXplore_AWC_Settings {
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_styles' ) );
+	}
+
+	/**
+	 * Enqueue admin styles
+	 *
+	 * @param string $hook Current admin page hook.
+	 */
+	public function enqueue_styles( $hook ) {
+		if ( 'settings_page_auto-webp-converter' !== $hook ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'wpxplore-awc-admin-styles',
+			AWC_PLUGIN_URL . 'includes/admin-styles.css',
+			array(),
+			AWC_VERSION
+		);
 	}
 
 	/**
@@ -118,6 +141,30 @@ class WpXplore_AWC_Settings {
 			'auto-webp-converter',
 			'wpxplore_awc_conversion_section'
 		);
+
+		add_settings_field(
+			'convert_media_uploads',
+			__( 'Convert Media Library Uploads', 'wpxplore-webp-converter' ),
+			array( $this, 'render_convert_media_uploads_field' ),
+			'auto-webp-converter',
+			'wpxplore_awc_conversion_section'
+		);
+
+		add_settings_section(
+			'wpxplore_awc_featured_image_section',
+			__( 'Featured Image Settings', 'wpxplore-webp-converter' ),
+			array( $this, 'render_featured_image_section_description' ),
+			'auto-webp-converter'
+		);
+
+		add_settings_field(
+			'featured_image_post_types',
+			__( 'Post Types for Featured Images', 'wpxplore-webp-converter' ),
+			array( $this, 'render_featured_image_post_types_field' ),
+			'auto-webp-converter',
+			'wpxplore_awc_featured_image_section'
+		);
+
 	}
 
 	/**
@@ -150,6 +197,23 @@ class WpXplore_AWC_Settings {
 			$sanitized['allowed_types'] = self::get_defaults()['allowed_types'];
 		}
 
+		// Sanitize convert media uploads (checkbox).
+		$sanitized['convert_media_uploads'] = isset( $input['convert_media_uploads'] ) && '1' === $input['convert_media_uploads'];
+
+		// Sanitize featured image post types.
+		if ( isset( $input['featured_image_post_types'] ) && is_array( $input['featured_image_post_types'] ) ) {
+			$post_types = get_post_types( array( 'public' => true ), 'names' );
+			$sanitized['featured_image_post_types'] = array_intersect( $input['featured_image_post_types'], $post_types );
+		} else {
+			$sanitized['featured_image_post_types'] = array();
+		}
+
+		// Sanitize directorist post type (checkbox).
+		$sanitized['directorist_post_type'] = isset( $input['directorist_post_type'] ) && 'enable' === $input['directorist_post_type'];
+
+		// Sanitize directorist frontend add listing (checkbox).
+		$sanitized['directorist_frontend_add_listing'] = isset( $input['directorist_frontend_add_listing'] ) && 'enable' === $input['directorist_frontend_add_listing'];
+
 		return $sanitized;
 	}
 
@@ -158,7 +222,7 @@ class WpXplore_AWC_Settings {
 	 */
 	public function render_section_description() {
 		?>
-		<p><?php esc_html_e( 'Configure how images are converted to WebP format.', 'wpxplore-webp-converter' ); ?></p>
+		<p class="wpxplore-awc-section-description"><?php esc_html_e( 'Configure how images are converted to WebP format.', 'wpxplore-webp-converter' ); ?></p>
 		<?php
 	}
 
@@ -169,19 +233,21 @@ class WpXplore_AWC_Settings {
 		$settings = self::get_settings();
 		$quality  = isset( $settings['quality'] ) ? absint( $settings['quality'] ) : 80;
 		?>
-		<input 
-			type="number" 
-			name="<?php echo esc_attr( self::OPTION_NAME ); ?>[quality]" 
-			id="wpxplore_awc_quality" 
-			value="<?php echo esc_attr( $quality ); ?>" 
-			min="0" 
-			max="100" 
-			step="1"
-			class="small-text"
-		/>
-		<p class="description">
-			<?php esc_html_e( 'Image quality for WebP conversion (0-100). Higher values mean better quality but larger file sizes. Recommended: 80.', 'wpxplore-webp-converter' ); ?>
-		</p>
+		<div class="wpxplore-awc-field-wrapper">
+			<label for="wpxplore_awc_quality"><?php esc_html_e( 'Convert Quality', 'wpxplore-webp-converter' ); ?></label>
+			<input 
+				type="number" 
+				name="<?php echo esc_attr( self::OPTION_NAME ); ?>[quality]" 
+				id="wpxplore_awc_quality" 
+				value="<?php echo esc_attr( $quality ); ?>" 
+				min="0" 
+				max="100" 
+				step="1"
+			/>
+			<p class="description">
+				<?php esc_html_e( 'Image quality for WebP conversion (0-100). Higher values mean better quality but larger file sizes. Recommended: 80.', 'wpxplore-webp-converter' ); ?>
+			</p>
+		</div>
 		<?php
 	}
 
@@ -197,23 +263,108 @@ class WpXplore_AWC_Settings {
 			'png'  => __( 'PNG', 'wpxplore-webp-converter' ),
 		);
 		?>
-		<fieldset>
-			<?php foreach ( $image_types as $key => $label ) : ?>
-				<label>
-					<input 
-						type="checkbox" 
-						name="<?php echo esc_attr( self::OPTION_NAME ); ?>[allowed_types][]" 
-						value="<?php echo esc_attr( $key ); ?>"
-						<?php checked( in_array( $key, $allowed_types, true ) ); ?>
-					/>
-					<?php echo esc_html( $label ); ?>
-				</label>
-				<br />
-			<?php endforeach; ?>
-		</fieldset>
-		<p class="description">
-			<?php esc_html_e( 'Select which image types should be converted to WebP format.', 'wpxplore-webp-converter' ); ?>
-		</p>
+		<div class="wpxplore-awc-field-wrapper">
+			<label><?php esc_html_e( 'Allow Image Type', 'wpxplore-webp-converter' ); ?></label>
+			<fieldset>
+				<?php foreach ( $image_types as $key => $label ) : ?>
+					<label>
+						<input 
+							type="checkbox" 
+							name="<?php echo esc_attr( self::OPTION_NAME ); ?>[allowed_types][]" 
+							value="<?php echo esc_attr( $key ); ?>"
+							<?php checked( in_array( $key, $allowed_types, true ) ); ?>
+						/>
+						<?php echo esc_html( $label ); ?>
+					</label>
+				<?php endforeach; ?>
+			</fieldset>
+			<p class="description">
+				<?php esc_html_e( 'Select which image types should be converted to WebP format.', 'wpxplore-webp-converter' ); ?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render convert media uploads field
+	 */
+	public function render_convert_media_uploads_field() {
+		$settings = self::get_settings();
+		$enabled  = isset( $settings['convert_media_uploads'] ) ? (bool) $settings['convert_media_uploads'] : true;
+		?>
+		<div class="wpxplore-awc-field-wrapper">
+			<label for="wpxplore_awc_convert_media_uploads">
+				<input 
+					type="checkbox" 
+					name="<?php echo esc_attr( self::OPTION_NAME ); ?>[convert_media_uploads]" 
+					id="wpxplore_awc_convert_media_uploads" 
+					value="1"
+					<?php checked( $enabled, true ); ?>
+				/>
+				<?php esc_html_e( 'Enable image conversion for direct uploads on Media Library page', 'wpxplore-webp-converter' ); ?>
+			</label>
+			<p class="description">
+				<?php esc_html_e( 'When enabled, images uploaded directly through the Media Library page will be automatically converted to WebP format.', 'wpxplore-webp-converter' ); ?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render featured image section description
+	 */
+	public function render_featured_image_section_description() {
+		?>
+		<p class="wpxplore-awc-section-description"><?php esc_html_e( 'Select which post types should have their featured images converted to WebP format when uploaded from the admin panel.', 'wpxplore-webp-converter' ); ?></p>
+		<?php
+	}
+
+	/**
+	 * Render featured image post types field
+	 */
+	public function render_featured_image_post_types_field() {
+		$settings = self::get_settings();
+		$enabled_post_types = isset( $settings['featured_image_post_types'] ) && is_array( $settings['featured_image_post_types'] ) ? $settings['featured_image_post_types'] : array();
+		
+		// Get all public post types that support featured images.
+		$post_types = get_post_types( array(), 'objects' );
+		$post_types_with_thumbnails = array();
+		
+		foreach ( $post_types as $post_type ) {
+			if ( post_type_supports( $post_type->name, 'thumbnail' ) ) {
+				$post_types_with_thumbnails[ $post_type->name ] = $post_type->label;
+			}
+		}
+		
+		if ( empty( $post_types_with_thumbnails ) ) {
+			?>
+			<div class="wpxplore-awc-field-wrapper">
+				<p><?php esc_html_e( 'No post types with featured image support found.', 'wpxplore-webp-converter' ); ?></p>
+			</div>
+			<?php
+			return;
+		}
+		?>
+		<div class="wpxplore-awc-field-wrapper">
+			<label><?php esc_html_e( 'Post Types for Featured Images', 'wpxplore-webp-converter' ); ?></label>
+			<fieldset class="wpxplore-awc-scrollable-fieldset">
+				<?php foreach ( $post_types_with_thumbnails as $post_type_name => $post_type_label ) : ?>
+					<label>
+						<input 
+							type="checkbox" 
+							name="<?php echo esc_attr( self::OPTION_NAME ); ?>[featured_image_post_types][]" 
+							value="<?php echo esc_attr( $post_type_name ); ?>"
+							<?php checked( in_array( $post_type_name, $enabled_post_types, true ) ); ?>
+						/>
+						<strong><?php echo esc_html( $post_type_label ); ?></strong>
+						<code><?php echo esc_html( $post_type_name ); ?></code>
+					</label>
+				<?php endforeach; ?>
+			</fieldset>
+			<p class="description">
+				<?php esc_html_e( 'When enabled for a post type, featured images uploaded from the admin panel edit page will be automatically converted to WebP format.', 'wpxplore-webp-converter' ); ?>
+			</p>
+		</div>
 		<?php
 	}
 
@@ -226,7 +377,7 @@ class WpXplore_AWC_Settings {
 		}
 
 		// Show success message if settings were saved.
-		if ( isset( $_GET['settings-updated'] ) ) {
+		if ( isset( $_GET['settings-updated'] ) && 'true' === sanitize_text_field( wp_unslash( $_GET['settings-updated'] ) ) ) {
 			add_settings_error(
 				'wpxplore_awc_messages',
 				'wpxplore_awc_message',
@@ -237,14 +388,21 @@ class WpXplore_AWC_Settings {
 
 		settings_errors( 'wpxplore_awc_messages' );
 		?>
-		<div class="wrap">
-			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<form action="options.php" method="post">
+		<div class="wrap wpxplore-awc-settings-wrap">
+			<div class="wpxplore-awc-settings-header">
+				<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+				<p><?php esc_html_e( 'Automatically convert images to WebP format for better performance and smaller file sizes.', 'wpxplore-webp-converter' ); ?></p>
+			</div>
+			<form action="options.php" method="post" class="wpxplore-awc-settings-form">
 				<?php
 				settings_fields( 'wpxplore_awc_settings_group' );
-				do_settings_sections( 'auto-webp-converter' );
-				submit_button( __( 'Save Settings', 'wpxplore-webp-converter' ) );
 				?>
+				<div class="wpxplore-awc-settings-content">
+					<?php do_settings_sections( 'auto-webp-converter' ); ?>
+				</div>
+				<div class="wpxplore-awc-settings-submit">
+					<?php submit_button( __( 'Save Settings', 'wpxplore-webp-converter' ) ); ?>
+				</div>
 			</form>
 		</div>
 		<?php
